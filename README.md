@@ -65,7 +65,7 @@ A PyTorch model for contextless phoneme prediction from speech audio. CUPE proce
 
 ## Trained Models
 
-Two 30.1M parameter models are available in the [checkpoints directory](https://huggingface.co/Tabahi/CUPE-2i/tree/main/ckpt).
+Three 30.1M parameter models are available in the [checkpoints directory](https://huggingface.co/Tabahi/CUPE-2i/tree/main/ckpt).
 
 ## Datasets
 
@@ -94,6 +94,9 @@ Two 30.1M parameter models are available in the [checkpoints directory](https://
 - **PER:** 0.49
 - **GER:** 0.39
 
+**Note:** CUPE models are designed for contextless phoneme prediction and are not optimal for phoneme classification tasks that require contextual information. For lower Phoneme Error Rate (PER) metrics, consider using large-scale pretrained models that process entire utterances with contextual awareness. CUPE excels at extracting pure, frame-level embeddings that represent the acoustic properties of each phoneme (e.g., /a/) independently of surrounding context.
+
+
 ---
 
 
@@ -107,7 +110,34 @@ pip install torch torchaudio huggingface_hub
 
 ## Easy Usage with Automatic Download
 
-See [example.py](https://huggingface.co/Tabahi/CUPE-2i/blob/main/example.py) for a bootstrap example.
+See [example.py](https://huggingface.co/Tabahi/CUPE-2i/blob/main/example.py) for a bootstrap example. Running it with the sample audio [109867__timkahn__butterfly.wav](samples/109867__timkahn__butterfly.wav.wav) (butterfly) should show the following output:
+
+```stdout
+Loading CUPE english model...
+Model loaded on cpu
+Processing audio: 1.26s duration
+Processed 75 frames (1200ms total)
+
+Results:
+Phoneme predictions shape: (75,)
+Group predictions shape: (75,)
+Model info: {'model_name': 'english', 'sample_rate': 16000, 'frames_per_second': 62.5, 'num_phoneme_classes': 67, 'num_group_classes': 17}
+
+First 10 frame predictions:
+Frame 0: phoneme=66, group=16
+Frame 1: phoneme=66, group=16
+Frame 2: phoneme=29, group=7
+Frame 3: phoneme=66, group=16
+Frame 4: phoneme=66, group=16
+Frame 5: phoneme=66, group=16
+Frame 6: phoneme=10, group=2
+Frame 7: phoneme=66, group=16
+Frame 8: phoneme=66, group=16
+Frame 9: phoneme=66, group=16
+
+Phonemes sequence: ['b', 'ʌ', 't', 'h', 'ʌ', 'f', 'l', 'æ']...
+Groups sequence: ['voiced_stops', 'central_vowels', 'voiceless_stops', 'voiceless_fricatives', 'central_vowels', 'voiceless_fricatives', 'laterals', 'low_vowels']...
+```
 
 To use `huggingface_hub` to automatically download and run:
 

@@ -41,6 +41,7 @@ def load_cupe_model(model_name="english", device="auto"):
     
     model_file = hf_hub_download(repo_id=repo_id, filename="model2i.py")
     windowing_file = hf_hub_download(repo_id=repo_id, filename="windowing.py")
+    mapper_file = hf_hub_download(repo_id=repo_id, filename="mapper.py")
     checkpoint_file = hf_hub_download(repo_id=repo_id, filename=f"ckpt/{model_files[model_name]}")
     
     # Dynamically import the modules
@@ -53,12 +54,18 @@ def load_cupe_model(model_name="english", device="auto"):
     
     model2i = import_module_from_file("model2i", model_file)
     windowing = import_module_from_file("windowing", windowing_file)
-    
+    mapper = import_module_from_file("mapper", mapper_file)
+
+    phoneme_to_token = mapper.phoneme_mapped_index
+    token_to_phoneme = {v: k for k, v in phoneme_to_token.items()}
+    group_to_token = mapper.phoneme_groups_index
+    token_to_group = {v: k for k, v in group_to_token.items()}
+
     # Initialize the model
     extractor = model2i.CUPEEmbeddingsExtractor(checkpoint_file, device=device)
     
     print(f"Model loaded on {device}")
-    return extractor, windowing
+    return extractor, windowing, token_to_phoneme, token_to_group
 
 def predict_phonemes(audio_path, model_name="english", device="auto"):
     """
@@ -74,7 +81,7 @@ def predict_phonemes(audio_path, model_name="english", device="auto"):
     """
     
     # Load model
-    extractor, windowing = load_cupe_model(model_name, device)
+    extractor, windowing, token_to_phoneme, token_to_group = load_cupe_model(model_name, device)
     
     # Audio processing parameters
     sample_rate = 16000
@@ -88,10 +95,16 @@ def predict_phonemes(audio_path, model_name="english", device="auto"):
     if audio.shape[0] > 1:
         audio = audio.mean(dim=0, keepdim=True)
     
-    # Resample to 16kHz if needed
-    if orig_sr != sample_rate:
-        resampler = torchaudio.transforms.Resample(orig_sr, sample_rate)
-        audio = resampler(audio)
+    resampler = torchaudio.transforms.Resample(
+            sample_rate,
+            lowpass_filter_width=64,
+            rolloff=0.9475937167399596,
+            resampling_method="sinc_interp_kaiser",
+            beta=14.769656459379492,
+        )
+    
+    # Always use resampler for consistency
+    audio = resampler(audio)
     
     # Move to device and add batch dimension
     audio = audio.to(device)
@@ -148,18 +161,25 @@ def predict_phonemes(audio_path, model_name="english", device="auto"):
     phoneme_preds = torch.argmax(phoneme_probs, dim=-1)
     group_preds = torch.argmax(group_probs, dim=-1)
     
+    phonemes_sequence = [token_to_phoneme[int(p)] for p in phoneme_preds.cpu().numpy()]
+    groups_sequence = [token_to_group[int(g)] for g in group_preds.cpu().numpy()]
+    # remove noise
+    phonemes_sequence = [p for p in phonemes_sequence if p != 'noise']
+    groups_sequence = [g for g in groups_sequence if g != 'noise']
+    
+    
     # Calculate timestamps (approximately 16ms per frame)
     num_frames = phoneme_probs.shape[0]
-    timestamps_ms = torch.arange(num_frames) * 16  # ~16ms per frame
     
-    print(f"✓ Processed {num_frames} frames ({num_frames*16}ms total)")
+    print(f"Processed {num_frames} frames ({num_frames*16}ms total)")
     
     return {
         'phoneme_probabilities': phoneme_probs.cpu().numpy(),
         'phoneme_predictions': phoneme_preds.cpu().numpy(),
         'group_probabilities': group_probs.cpu().numpy(), 
         'group_predictions': group_preds.cpu().numpy(),
-        'timestamps_ms': timestamps_ms.cpu().numpy(),
+        'phonemes_sequence': phonemes_sequence,
+        'groups_sequence': groups_sequence,
         'model_info': {
             'model_name': model_name,
             'sample_rate': sample_rate,
@@ -173,11 +193,14 @@ def predict_phonemes(audio_path, model_name="english", device="auto"):
 if __name__ == "__main__":
     
     # Simple example
-    audio_file = "samples/Schwa-What.mp3.wav"  # Replace with your audio file
+    audio_file = "samples/109867__timkahn__butterfly.wav.wav"  # Replace with your audio file
+    
     
     if not os.path.exists(audio_file):
         print(f"Audio file {audio_file} does not exist. Please provide a valid path.")
         sys.exit(1)
+    
+    torch.manual_seed(42)  # For reproducibility
     # Predict with English model
     results = predict_phonemes(
         audio_path=audio_file,
@@ -188,12 +211,40 @@ if __name__ == "__main__":
     print(f"\nResults:")
     print(f"Phoneme predictions shape: {results['phoneme_predictions'].shape}")
     print(f"Group predictions shape: {results['group_predictions'].shape}")
-    print(f"Timestamps shape: {results['timestamps_ms'].shape}")
     print(f"Model info: {results['model_info']}")
     
     # Show first 10 predictions with timestamps
     print(f"\nFirst 10 frame predictions:")
     for i in range(min(10, len(results['phoneme_predictions']))):
         print(f"Frame {i}: phoneme={results['phoneme_predictions'][i]}, "
-              f"group={results['group_predictions'][i]}, "
-              f"time={results['timestamps_ms'][i]:.0f}ms")
+              f"group={results['group_predictions'][i]}")
+
+    print(f"\nPhonemes sequence: {results['phonemes_sequence'][:10]}...")  # Show first 10 phonemes
+    print(f"Groups sequence: {results['groups_sequence'][:10]}...")
+
+''' output:
+Loading CUPE english model...
+Model loaded on cpu
+Processing audio: 1.26s duration
+Processed 75 frames (1200ms total)
+
+Results:
+Phoneme predictions shape: (75,)
+Group predictions shape: (75,)
+Model info: {'model_name': 'english', 'sample_rate': 16000, 'frames_per_second': 62.5, 'num_phoneme_classes': 67, 'num_group_classes': 17}
+
+First 10 frame predictions:
+Frame 0: phoneme=66, group=16
+Frame 1: phoneme=66, group=16
+Frame 2: phoneme=29, group=7
+Frame 3: phoneme=66, group=16
+Frame 4: phoneme=66, group=16
+Frame 5: phoneme=66, group=16
+Frame 6: phoneme=10, group=2
+Frame 7: phoneme=66, group=16
+Frame 8: phoneme=66, group=16
+Frame 9: phoneme=66, group=16
+
+Phonemes sequence: ['b', 'ʌ', 't', 'h', 'ʌ', 'f', 'l', 'æ']...
+Groups sequence: ['voiced_stops', 'central_vowels', 'voiceless_stops', 'voiceless_fricatives', 'central_vowels', 'voiceless_fricatives', 'laterals', 'low_vowels']...
+'''
