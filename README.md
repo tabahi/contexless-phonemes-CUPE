@@ -292,6 +292,21 @@ print(logits.shape)  # [B, T, 66]
 - Timestamp alignment (examples coming soon)
 - Speech analysis
 
+## Cite
+
+```tex
+@inproceedings{rehman2025cupe,
+  title     = {CUPE: Contextless Universal Phoneme Encoder for Language-Agnostic Speech Processing},
+  author    = {Abdul Rehman and Jian-Jun Zhang and Xiaosong Yang},
+  booktitle = {Proceedings of the 8th International Conference on Natural Language and Speech Processing (ICNLSP 2025)},
+  year      = {2025},
+  organization = {ICNLSP},
+  publisher = {International Conference on Natural Language and Speech Processing},
+}
+
+```
+
+
 ## Sample probabilties timeline
 
 ![Sample output logits plot](plots/where_they_went_timeline.png)
@@ -303,3 +318,6 @@ print(logits.shape)  # [B, T, 66]
 ## English-only Confusion Plot (Probabilities)
 
 ![English-only Confusion Plot (probabiltities)](plots/uh03b_confusion_probs_heatmap_libri_dev_en.png)
+
+
+
