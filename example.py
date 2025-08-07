@@ -42,6 +42,7 @@ def load_cupe_model(model_name="english", device="auto"):
     model_file = hf_hub_download(repo_id=repo_id, filename="model2i.py")
     windowing_file = hf_hub_download(repo_id=repo_id, filename="windowing.py")
     mapper_file = hf_hub_download(repo_id=repo_id, filename="mapper.py")
+    model_utils_file = hf_hub_download(repo_id=repo_id, filename="model_utils.py")
     checkpoint_file = hf_hub_download(repo_id=repo_id, filename=f"ckpt/{model_files[model_name]}")
     
     # Dynamically import the modules
@@ -51,7 +52,8 @@ def load_cupe_model(model_name="english", device="auto"):
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
         return module
-    
+
+    _ = import_module_from_file("model_utils", model_utils_file)
     model2i = import_module_from_file("model2i", model_file)
     windowing = import_module_from_file("windowing", windowing_file)
     mapper = import_module_from_file("mapper", mapper_file)
