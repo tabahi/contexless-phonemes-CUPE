@@ -60,7 +60,7 @@ model-index:
 [![🤗 Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-blue)](https://huggingface.co/Tabahi/CUPE-2i)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-green)](https://github.com/tabahi/contexless-phonemes-CUPE)
 [![Paper](https://img.shields.io/badge/arXiv-Paper-red)](https://arxiv.org/abs/2508.15316)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![License: GPLv3](https://img.shields.io/badge/License-GPLv3-yellow.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 > 🚀 **A PyTorch model for contextless phoneme prediction from speech audio**
 
