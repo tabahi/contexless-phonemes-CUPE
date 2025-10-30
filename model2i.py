@@ -328,6 +328,8 @@ class CUPEEmbeddingsExtractor(nn.Module):
 
         cupe_model = ContextFreePhonemeRecognizer()
 
+        device = device if torch.cuda.is_available() else 'cpu'
+
         #from argparse import Namespace
         checkpoint = torch.load(cupe_ckpt_path, map_location=torch.device(device), weights_only=True)
         if 'model_config' not in checkpoint: raise ValueError("Model config not found in checkpoint")

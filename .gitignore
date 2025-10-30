@@ -3,7 +3,7 @@ ckpt/*
 __pycache__/
 *.py[codz]
 *$py.class
-
+notes.txt
 # C extensions
 *.so
 

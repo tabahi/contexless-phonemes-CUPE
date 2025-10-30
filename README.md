@@ -84,12 +84,17 @@ All models are available in the [**checkpoints directory**](https://huggingface.
 
 | 🏷️ **Model** | 🌍 **Languages** | 📊 **PER** | 📊 **GER** | 📝 **Description** |
 |------------|-------------|----------|----------|--------------|
-| 🇬🇧 **English** | English | **0.25** | **0.23** | 🏆 Best quality for English speech |
+| 🇬🇧 **English** | English | **0.24** | **0.21** | 🏆 Best quality for English speech |
 | 🌍 **Multilingual MLS** | 8 European | **0.31** | **0.26** | 🇪🇺 en, de, fr, es, pt, it, pl, nl |
 | 🌐 **Multilingual MSWC** | 38 languages | **0.49** | **0.39** | 🗺️ Broad language coverage |
 
 <details>
 <summary>📋 <strong>Detailed Metrics</strong></summary>
+
+**🇬🇧 English (New: Oct2025) ([en_libri1000_ua01c](https://huggingface.co/Tabahi/CUPE-2i/resolve/main/ckpt/en_libri1000_ua01c_e4_val_GER=0.2186.ckpt)):**
+- 🎯 **PER:** 0.24 (Phoneme Error Rate)
+- 🎯 **GER:** 0.22 (Phoneme Group Error Rate)
+- Fixed rhotics and compound phonemes
 
 **🇬🇧 English ([en_libri1000_uj01d](https://huggingface.co/Tabahi/CUPE-2i/resolve/main/ckpt/en_libri1000_uj01d_e199_val_GER=0.2307.ckpt)):**
 - 🎯 **PER:** 0.25 (Phoneme Error Rate)
